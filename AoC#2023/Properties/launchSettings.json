@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "AoC#2023": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
