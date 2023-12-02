@@ -27,13 +27,14 @@ builder.Services.AddHttpClient<AdventClient>((serviceProvider, client) =>
     };
 });
 builder.Services.AddKeyedSingleton<ISolution, Day1>(1);
+builder.Services.AddKeyedSingleton<ISolution, Day2>(2);
 builder.Services.AddSingleton<Runner>();
 
 var app = builder.Build();
 var runner = app.Services.GetRequiredService<Runner>();
 await app.StartAsync();
 
-var day = 1;
+var day = 2;
 await runner.RunAsync(day);
 
 await app.StopAsync();

@@ -18,8 +18,8 @@ internal class Day1 : ISolution
             foreach (var c in line)
             {
                 if (!char.IsDigit(c)) continue;
-                if (digit == null) total += 10 * CharToDigit(c);
-                digit = CharToDigit(c);
+                if (digit == null) total += 10 * Helpers.CharToDigit(c);
+                digit = Helpers.CharToDigit(c);
             }
 
 
@@ -65,7 +65,7 @@ internal class Day1 : ISolution
             }
             else if (char.IsDigit(c))
             {
-                digit = CharToDigit(c);
+                digit = Helpers.CharToDigit(c);
                 return true;
             }
 
@@ -82,22 +82,7 @@ internal class Day1 : ISolution
         return false;
     }
 
-    public static int CharToDigit(char c)
-    {
-        return c switch
-        {
-            '1' => 1,
-            '2' => 2,
-            '3' => 3,
-            '4' => 4,
-            '5' => 5,
-            '6' => 6,
-            '7' => 7,
-            '8' => 8,
-            '9' => 9,
-            _ => throw new ArgumentException()
-        };
-    }
+
 }
 
 public record DigitTrie
