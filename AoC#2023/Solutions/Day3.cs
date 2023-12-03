@@ -20,126 +20,76 @@ namespace AoC_2023.Solutions
                 {
                     offset += leading.Length;
                     var isAdjacentToSymbol = false;
-                    if (leading.Length > 0 && IsSymbol(leading[leading.Length - 1]))
-                        isAdjacentToSymbol |= true;
-                    if (current.Length > 0 && IsSymbol(current[0]))
-                        isAdjacentToSymbol |= true;
-
-                    if (!isAdjacentToSymbol)
-                    {
-                        if (next.Length > 0)
-                        {
-                            var peekMin = Math.Max(offset - 1, 0);
-                            var peekMax = Math.Min(offset + numeric.Length + 1, next.Length - 1);
-                            var nextWindow = next.Slice(peekMin, peekMax - peekMin);
-                            if (SequenceContainsSymbols(nextWindow))
-                                isAdjacentToSymbol |= true;
-                        }
-
-                        if (previous.Length > 0)
-                        {
-                            var peekMin = Math.Max(offset - 1, 0);
-                            var peekMax = Math.Min(offset + numeric.Length + 1, previous.Length - 1);
-                            var previousWindow = previous.Slice(peekMin, peekMax - peekMin);
-                            if (SequenceContainsSymbols(previousWindow))
-                                isAdjacentToSymbol |= true;
-                        }
-                    };
-
+                    isAdjacentToSymbol |= leading.Length > 0 && IsSymbol(leading[leading.Length - 1]);  //Check to our right
+                    isAdjacentToSymbol |= current.Length > 0 && IsSymbol(current[0]);   //Check to our left
+                    isAdjacentToSymbol |= ScanForSymbol(next, offset, numeric); //Check below
+                    isAdjacentToSymbol |= ScanForSymbol(previous, offset, numeric); //Check above
                     offset += numeric.Length;
-                    if (isAdjacentToSymbol)
-                        total += Helpers.IntFromChars(numeric);
+                    if (isAdjacentToSymbol) total += Helpers.IntFromChars(numeric);
                 }
 
                 previous = currentUntouched;
                 current = next;
-                _ = Helpers.ReadLine(ref input, out next);
+                Helpers.ReadLine(ref input, out next);
             }
             return total.ToString();
         }
 
+
         public string Part2(ReadOnlySpan<char> input)
         {
+            long total = 0;
             Helpers.ReadLine(ref input, out var current);
             Helpers.ReadLine(ref input, out var next);
             var previous = current[..0];
-
-            long total = 0;
             while (current.Length > 0)
             {
                 var offset = 0;
                 var currentUntouched = current;
-                var previousUntouched = previous;
-                var nextUntouched = next;
                 while (Helpers.FindNext(ref current, '*', out var leading))
                 {
+                    offset += leading.Length;
                     var adjacentNumberCount = 0;
                     long gearRatio = 1;
-
-                    offset += leading.Length;
-                    if (leading.Length > 0 && char.IsDigit(leading[leading.Length - 1]))
-                    {
-                        var window = currentUntouched.Slice(0, offset);
-                        var numeric = 0;
-                        while (Helpers.ReadNextInt(ref window, out var num, out _))
-                            numeric = Helpers.IntFromChars(num);
-
-                        gearRatio *= numeric;
-                        adjacentNumberCount++;
-                    }
-                    if (current.Length > 0 && char.IsDigit(current[0]))
-                    {
-                        var window = currentUntouched.Slice(Math.Min(offset + 1, currentUntouched.Length - 1));
-                        var numeric = 0;
-                        if (Helpers.ReadNextInt(ref window, out var num, out _))
-                            numeric = Helpers.IntFromChars(num);
-
-                        gearRatio *= numeric;
-                        adjacentNumberCount++;
-                    }
-
-                    //Read through the numbers on the previous line
-                    var pOffset = 0;
-                    var prevWindow = previousUntouched;
-                    while (previous.Length > 0 & Helpers.ReadNextInt(ref prevWindow, out var numericSpan, out var pLeading))
-                    {
-                        pOffset += pLeading.Length;
-                        var minBound = pOffset - 1;
-                        var maxBound = pOffset + numericSpan.Length + 1;
-                        if (offset >= minBound && offset < maxBound)
-                        {
-                            gearRatio *= Helpers.IntFromChars(numericSpan);
-                            adjacentNumberCount++;
-                        }
-                        pOffset += numericSpan.Length;
-                    }
-
-                    var nOffset = 0;
-                    var nextWindow = nextUntouched;
-                    while (next.Length > 0 & Helpers.ReadNextInt(ref nextWindow, out var numericSpan, out var nLeading))
-                    {
-                        nOffset += nLeading.Length;
-                        var minBound = nOffset - 1;
-                        var maxBound = nOffset + numericSpan.Length + 1;
-                        if (offset >= minBound && offset < maxBound)
-                        {
-                            gearRatio *= Helpers.IntFromChars(numericSpan);
-                            adjacentNumberCount++;
-                        }
-                        nOffset += numericSpan.Length;
-                    }
-
+                    ScanForGearRatios(offset, currentUntouched, ref adjacentNumberCount, ref gearRatio);
+                    ScanForGearRatios(offset, previous, ref adjacentNumberCount, ref gearRatio);
+                    ScanForGearRatios(offset, next, ref adjacentNumberCount, ref gearRatio);
                     offset += 1;
                     if (adjacentNumberCount == 2)
                         total += gearRatio;
                 }
 
-
                 previous = currentUntouched;
-                current = nextUntouched;
+                current = next;
                 Helpers.ReadLine(ref input, out next);
             }
             return total.ToString();
+        }
+
+        private static bool ScanForSymbol(ReadOnlySpan<char> input, int offset, ReadOnlySpan<char> numeric)
+        {
+            if (input.Length == 0) return false;
+            var peekMin = Math.Max(offset - 1, 0);
+            var peekMax = Math.Min(offset + numeric.Length + 1, input.Length - 1);
+            var scanWindow = input.Slice(peekMin, peekMax - peekMin);
+            return SequenceContainsSymbols(scanWindow);
+        }
+
+        private static void ScanForGearRatios(int offset, ReadOnlySpan<char> scanSource, ref int adjacentNumberCount, ref long gearRatio)
+        {
+            var scanOffset = 0;
+            while (scanSource.Length > 0 & Helpers.ReadNextInt(ref scanSource, out var numericSpan, out var pLeading))
+            {
+                scanOffset += pLeading.Length;
+                var minBound = scanOffset - 1;
+                var maxBound = scanOffset + numericSpan.Length + 1;
+                if (offset >= minBound && offset < maxBound)
+                {
+                    gearRatio *= Helpers.IntFromChars(numericSpan);
+                    adjacentNumberCount++;
+                }
+                scanOffset += numericSpan.Length;
+            }
         }
 
         private static bool SequenceContainsSymbols(ReadOnlySpan<char> sequence)
