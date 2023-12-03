@@ -10,20 +10,36 @@
                 return false;
             }
 
-            var delimiterPos = input.IndexOf('\n');
-            if (delimiterPos != -1)
+
+            return ReadNext(ref input, out currentLine, '\n');
+        }
+
+        internal static bool ReadNext(ref ReadOnlySpan<char> input, out ReadOnlySpan<char> slice, char delimiter)
+        {
+            if (input.Length == 0)
             {
-                currentLine = input.Slice(0, delimiterPos);
-                input = input.Slice(delimiterPos);
-                if (input.Length > 0)
-                {
-                    input = input.Slice(1);
-                }
-                return true;
+                slice = ReadOnlySpan<char>.Empty;
+                return false;
             }
 
-            currentLine = input.Slice(0, input.Length);
-            input = ReadOnlySpan<char>.Empty;
+            var delimiterPos = input.IndexOf(delimiter);
+            slice = delimiterPos == -1 ? input : input[..delimiterPos];
+            input = delimiterPos == -1 ? ReadOnlySpan<char>.Empty : input[(delimiterPos + 1)..];
+            return true;
+        }
+
+
+        internal static bool ReadNext(ref ReadOnlySpan<char> input, out ReadOnlySpan<char> slice, ReadOnlySpan<char> delimiter)
+        {
+            if (input.Length == 0)
+            {
+                slice = ReadOnlySpan<char>.Empty;
+                return false;
+            }
+
+            var delimiterPos = input.IndexOf(delimiter);
+            slice = delimiterPos == -1 ? input : input[..delimiterPos];
+            input = delimiterPos == -1 ? ReadOnlySpan<char>.Empty : input[(delimiterPos + 1)..];
             return true;
         }
 
@@ -52,7 +68,7 @@
             for (var i = 0; i < input.Length; i++)
             {
                 var pos = input.Length - 1 - i;
-                value += Helpers.CharToDigit(input[pos]) * (int)Math.Pow(10, i);
+                value += CharToDigit(input[pos]) * (int)Math.Pow(10, i);
             }
             return value;
         }
