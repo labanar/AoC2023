@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using AoC_2023;
 using AoC_2023.Solutions;
+using AoC_2023.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -28,13 +29,14 @@ builder.Services.AddHttpClient<AdventClient>((serviceProvider, client) =>
 });
 builder.Services.AddKeyedSingleton<ISolution, Day1>(1);
 builder.Services.AddKeyedSingleton<ISolution, Day2>(2);
+builder.Services.AddKeyedSingleton<ISolution, Day3>(3);
 builder.Services.AddSingleton<Runner>();
 
 var app = builder.Build();
 var runner = app.Services.GetRequiredService<Runner>();
 await app.StartAsync();
 
-var day = 2;
+var day = 3;
 await runner.RunAsync(day);
 
 await app.StopAsync();
@@ -50,5 +52,29 @@ internal class Runner(AdventClient client, ILogger<Runner> logger, IServiceProvi
         logger.LogInformation("Part 1: {Answer}", part1);
         var part2 = solution.Part2(input);
         logger.LogInformation("Part 2: {Answer}", part2);
+    }
+
+    private void DoStuff()
+    {
+        var line = "..35..633.".AsSpan();
+        var offset = 0;
+        while (Helpers.ReadNextInt(ref line, out var theVal, out var leading))
+        {
+            offset += leading.Length;
+            //+- from the offset for our above and below peeking
+
+            var isAdjacentToSymbol = false;
+
+            if (leading.Length > 0 && char.IsSymbol(leading[leading.Length - 1]))
+                isAdjacentToSymbol |= true;
+
+            if (line.Length > 0 && char.IsSymbol(line[0]))
+                isAdjacentToSymbol |= true;
+
+            if (!isAdjacentToSymbol)
+            {
+                //Time do do some peekaroos
+            }
+        }
     }
 }
