@@ -79,6 +79,30 @@
             return true;
         }
 
+        internal static bool FindNext(ref ReadOnlySpan<char> input, char toFind, out ReadOnlySpan<char> leadingChars)
+        {
+            if (input.Length == 0)
+            {
+                leadingChars = ReadOnlySpan<char>.Empty;
+                return false;
+            }
+
+            for (int i = 0; i < input.Length; i++)
+            {
+                var c = input[i];
+                if (c == toFind)
+                {
+                    leadingChars = input.Slice(0, i);
+                    input = input.Slice(i + 1);
+                    return true;
+                }
+            }
+
+            leadingChars = ReadOnlySpan<char>.Empty;
+            input = ReadOnlySpan<char>.Empty;
+            return false;
+        }
+
         internal static int CharToDigit(char c)
         {
             return c switch

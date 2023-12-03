@@ -1,7 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using AoC_2023;
 using AoC_2023.Solutions;
-using AoC_2023.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -52,29 +51,5 @@ internal class Runner(AdventClient client, ILogger<Runner> logger, IServiceProvi
         logger.LogInformation("Part 1: {Answer}", part1);
         var part2 = solution.Part2(input);
         logger.LogInformation("Part 2: {Answer}", part2);
-    }
-
-    private void DoStuff()
-    {
-        var line = "..35..633.".AsSpan();
-        var offset = 0;
-        while (Helpers.ReadNextInt(ref line, out var theVal, out var leading))
-        {
-            offset += leading.Length;
-            //+- from the offset for our above and below peeking
-
-            var isAdjacentToSymbol = false;
-
-            if (leading.Length > 0 && char.IsSymbol(leading[leading.Length - 1]))
-                isAdjacentToSymbol |= true;
-
-            if (line.Length > 0 && char.IsSymbol(line[0]))
-                isAdjacentToSymbol |= true;
-
-            if (!isAdjacentToSymbol)
-            {
-                //Time do do some peekaroos
-            }
-        }
     }
 }
