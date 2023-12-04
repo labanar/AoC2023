@@ -85,7 +85,6 @@ namespace AoC_2023.Solutions
         public async Task<string> Part1(PipeReader pipe)
         {
             var total = 0;
-
             await foreach (var matches in ReadMatches(pipe))
                 total += matches == 0 ? 0 : (int)Math.Pow(2, matches - 1);
 
@@ -108,8 +107,8 @@ namespace AoC_2023.Solutions
             {
                 var result = await pipe.ReadAsync();
                 var buffer = result.Buffer;
-                while (Helpers.TryReadLine(ref buffer, out ReadOnlySequence<byte> line))
-                    yield return ProcessLine(line);
+                while (TryProcessNextLine(ref buffer, out var numMatches))
+                    yield return numMatches;
 
                 pipe.AdvanceTo(buffer.Start, buffer.End);
                 if (result.IsCompleted)
@@ -117,16 +116,15 @@ namespace AoC_2023.Solutions
             }
         }
 
-        private int ProcessLine(ReadOnlySequence<byte> line)
+        private bool TryProcessNextLine(ref ReadOnlySequence<byte> buffer, out int matches)
         {
-            var reader = new SequenceReader<byte>(line);
-            reader.TryReadTo(out ReadOnlySpan<byte> _, ": "u8, true);
-            reader.TryReadTo(out ReadOnlySpan<byte> winnningNumbers, " | "u8, true);
-            Span<byte> myNumbers = stackalloc byte[(int)reader.UnreadSequence.Length];
-            reader.UnreadSequence.CopyTo(myNumbers);
+            matches = 0;
+            var reader = new SequenceReader<byte>(buffer);
+            if (!reader.TryReadTo(out ReadOnlySpan<byte> _, ": "u8, true)) return false;
+            if (!reader.TryReadTo(out ReadOnlySpan<byte> winnningNumbers, " | "u8, true)) return false;
+            if (!reader.TryReadTo(out ReadOnlySpan<byte> myNumbers, (byte)'\n', true)) return false;
             winnningNumbers = winnningNumbers.Trim((byte)' ');
             myNumbers.TrimSpaces();
-            var matches = 0;
             while (Helpers.ReadNext(ref winnningNumbers, out var winningNumberBytes, " "u8))
             {
                 winningNumberBytes.TrimSpaces();
@@ -135,7 +133,8 @@ namespace AoC_2023.Solutions
 
                 winnningNumbers.TrimSpaces();
             }
-            return matches;
+            buffer = buffer.Slice(reader.Position);
+            return true;
         }
 
         private static bool ScanForNumber(ReadOnlySpan<byte> scanSource, ReadOnlySpan<byte> valueToFind)

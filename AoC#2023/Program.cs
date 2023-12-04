@@ -39,7 +39,7 @@ var runner = app.Services.GetRequiredService<Solver>();
 await app.StartAsync();
 
 var day = 4;
-await runner.Solve(day);
+//await runner.Solve(day);
 await runner.SolvePipelines(day);
 
 await app.StopAsync();
@@ -60,8 +60,8 @@ internal class Solver(AdventClient client, ILogger<Solver> logger, IServiceProvi
     public async Task SolvePipelines(int day)
     {
         var solution = serviceProvider.GetRequiredKeyedService<IPiplinesSolution>(day);
-        var p1 = await solution.Part1(await client.GetInputAsPipeReader(day));
-        logger.LogInformation("{Day} Part 1: {Answer}", day, p1);
+        //var p1 = await solution.Part1(await client.GetInputAsPipeReader(day));
+        //logger.LogInformation("{Day} Part 1: {Answer}", day, p1);
         var p2 = await solution.Part2(await client.GetInputAsPipeReader(day));
         logger.LogInformation("{Day} Part 1: {Answer}", day, p2);
     }
