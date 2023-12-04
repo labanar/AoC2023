@@ -28,28 +28,39 @@ builder.Services.AddHttpClient<AdventClient>((serviceProvider, client) =>
 });
 builder.Services.AddKeyedSingleton<ISolution, Day1>(1);
 builder.Services.AddKeyedSingleton<ISolution, Day2>(2);
+builder.Services.AddKeyedSingleton<IPiplinesSolution, Day2Pipelines>(2);
 builder.Services.AddKeyedSingleton<ISolution, Day3>(3);
-builder.Services.AddSingleton<Runner>();
+builder.Services.AddSingleton<Solver>();
 
 var app = builder.Build();
-var runner = app.Services.GetRequiredService<Runner>();
+var runner = app.Services.GetRequiredService<Solver>();
 await app.StartAsync();
 
-var day = 3;
-await runner.RunAsync(day);
+var day = 2;
+await runner.Solve(day);
+await runner.SolvePipelines(day);
 
 await app.StopAsync();
 
 
-internal class Runner(AdventClient client, ILogger<Runner> logger, IServiceProvider serviceProvider)
+internal class Solver(AdventClient client, ILogger<Solver> logger, IServiceProvider serviceProvider)
 {
-    public async Task RunAsync(int day)
+    public async Task Solve(int day)
     {
         var solution = serviceProvider.GetRequiredKeyedService<ISolution>(day);
         var input = await client.DownloadInputFileAsync(day);
         var part1 = solution.Part1(input);
-        logger.LogInformation("Part 1: {Answer}", part1);
+        logger.LogInformation("{Day} Part 1: {Answer}", day, part1);
         var part2 = solution.Part2(input);
-        logger.LogInformation("Part 2: {Answer}", part2);
+        logger.LogInformation("{Day} Part 2: {Answer}", day, part2);
+    }
+
+    public async Task SolvePipelines(int day)
+    {
+        var solution = serviceProvider.GetRequiredKeyedService<IPiplinesSolution>(day);
+        var p1 = await solution.Part1(await client.GetInputAsPipeReader(day));
+        var p2 = await solution.Part2(await client.GetInputAsPipeReader(day));
+        logger.LogInformation("{Day} Part 1: {Answer}", day, p1);
+        logger.LogInformation("{Day} Part 1: {Answer}", day, p2);
     }
 }

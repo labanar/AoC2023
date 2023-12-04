@@ -1,7 +1,49 @@
-﻿namespace AoC_2023.Utilities
+﻿using System.Buffers;
+using System.IO.Pipelines;
+
+namespace AoC_2023.Utilities
 {
     internal static class Helpers
     {
+
+        internal static bool TryReadLine(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> line)
+        {
+            var reader = new SequenceReader<byte>(buffer);
+            if (reader.TryReadTo(out line, (byte)'\n', true))
+            {
+                buffer = buffer.Slice(line.End);
+                buffer = buffer.Slice(1);
+                return true;
+            }
+            return false;
+        }
+
+        internal static bool ReadLine(Stream stream, out ReadOnlySpan<char> currentLine)
+        {
+            var reader = PipeReader.Create(stream);
+            currentLine = ReadOnlySpan<char>.Empty;
+            var position = 0;
+            while (reader.TryRead(out var result))
+            {
+                //Keep going until we find a newline
+                foreach (var segment in result.Buffer)
+                {
+                    foreach (var c in segment.Span)
+                    {
+                        if (c == '\n')
+                        {
+                            var lineSlice = result.Buffer.Slice(0, position);
+                            Console.WriteLine(lineSlice.ToString());
+                            reader.AdvanceTo(lineSlice.End);
+                            return true;
+                        }
+                        position++;
+                    }
+                }
+            }
+
+            return false;
+        }
         internal static bool ReadLine(ref ReadOnlySpan<char> input, out ReadOnlySpan<char> currentLine)
         {
             if (input == null || input.Length == 0)
@@ -34,7 +76,20 @@
             }
             var delimiterPos = input.IndexOf(delimiter);
             slice = delimiterPos == -1 ? input : input[..delimiterPos];
-            input = delimiterPos == -1 ? ReadOnlySpan<char>.Empty : input[(delimiterPos + 1)..];
+            input = delimiterPos == -1 ? ReadOnlySpan<char>.Empty : input[(delimiterPos + delimiter.Length)..];
+            return true;
+        }
+
+        internal static bool ReadNext(ref ReadOnlySpan<byte> input, out ReadOnlySpan<byte> slice, ReadOnlySpan<byte> delimiter)
+        {
+            if (input.Length == 0)
+            {
+                slice = ReadOnlySpan<byte>.Empty;
+                return false;
+            }
+            var delimiterPos = input.IndexOf(delimiter);
+            slice = delimiterPos == -1 ? input : input[..delimiterPos];
+            input = delimiterPos == -1 ? ReadOnlySpan<byte>.Empty : input[(delimiterPos + delimiter.Length)..];
             return true;
         }
 
@@ -128,6 +183,17 @@
             {
                 var pos = input.Length - 1 - i;
                 value += CharToDigit(input[pos]) * (int)Math.Pow(10, i);
+            }
+            return value;
+        }
+
+        internal static int IntFromCharUtf8Bytes(ReadOnlySpan<byte> input)
+        {
+            var value = 0;
+            for (var i = 0; i < input.Length; i++)
+            {
+                var pos = input.Length - 1 - i;
+                value += (input[pos] - '0') * (int)Math.Pow(10, i);
             }
             return value;
         }

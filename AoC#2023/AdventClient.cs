@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using System.IO.Pipelines;
 
 namespace AoC_2023
 {
@@ -22,6 +23,13 @@ namespace AoC_2023
 
         public async Task<string> DownloadInputFileAsync(int day) =>
             await _client.GetStringAsync($"/{_year}/day/{day}/input");
+
+        public async Task<PipeReader> GetInputAsPipeReader(int day)
+        {
+            var response = await _client.GetAsync($"/{_year}/day/{day}/input", HttpCompletionOption.ResponseHeadersRead);
+            var stream = await response.Content.ReadAsStreamAsync();
+            return PipeReader.Create(stream);
+        }
 
         public async Task<bool> SubmitAnswerAsync(int day, int part, string answer)
         {
