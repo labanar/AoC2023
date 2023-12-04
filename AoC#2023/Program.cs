@@ -30,15 +30,16 @@ builder.Services.AddKeyedSingleton<ISolution, Day1>(1);
 builder.Services.AddKeyedSingleton<ISolution, Day2>(2);
 builder.Services.AddKeyedSingleton<IPiplinesSolution, Day2Pipelines>(2);
 builder.Services.AddKeyedSingleton<ISolution, Day3>(3);
+builder.Services.AddKeyedSingleton<ISolution, Day4>(4);
 builder.Services.AddSingleton<Solver>();
 
 var app = builder.Build();
 var runner = app.Services.GetRequiredService<Solver>();
 await app.StartAsync();
 
-var day = 2;
+var day = 4;
 await runner.Solve(day);
-await runner.SolvePipelines(day);
+//await runner.SolvePipelines(day);
 
 await app.StopAsync();
 

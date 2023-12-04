@@ -77,7 +77,7 @@ namespace AoC_2023.Utilities
             var delimiterPos = input.IndexOf(delimiter);
             slice = delimiterPos == -1 ? input : input[..delimiterPos];
             input = delimiterPos == -1 ? ReadOnlySpan<char>.Empty : input[(delimiterPos + delimiter.Length)..];
-            return true;
+            return slice.Length > 0;
         }
 
         internal static bool ReadNext(ref ReadOnlySpan<byte> input, out ReadOnlySpan<byte> slice, ReadOnlySpan<byte> delimiter)
