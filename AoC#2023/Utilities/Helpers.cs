@@ -5,6 +5,15 @@ namespace AoC_2023.Utilities
 {
     internal static class Helpers
     {
+        internal static void TrimSpaces(this ref ReadOnlySpan<byte> bytes)
+        {
+            bytes = bytes.Trim((byte)' ');
+        }
+        internal static void TrimSpaces(this ref Span<byte> bytes)
+        {
+            bytes = bytes.Trim((byte)' ');
+        }
+
 
         internal static bool TryReadLine(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> line)
         {
