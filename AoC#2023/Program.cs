@@ -32,15 +32,16 @@ builder.Services.AddKeyedSingleton<IPiplinesSolution, Day2Pipelines>(2);
 builder.Services.AddKeyedSingleton<ISolution, Day3>(3);
 builder.Services.AddKeyedSingleton<ISolution, Day4>(4);
 builder.Services.AddKeyedSingleton<IPiplinesSolution, Day4Pipelines>(4);
+builder.Services.AddKeyedSingleton<ISolution, Day5>(5);
 builder.Services.AddSingleton<Solver>();
 
 var app = builder.Build();
 var runner = app.Services.GetRequiredService<Solver>();
 await app.StartAsync();
 
-var day = 4;
-//await runner.Solve(day);
-await runner.SolvePipelines(day);
+var day = 5;
+await runner.Solve(day);
+//await runner.SolvePipelines(day);
 
 await app.StopAsync();
 
@@ -60,8 +61,8 @@ internal class Solver(AdventClient client, ILogger<Solver> logger, IServiceProvi
     public async Task SolvePipelines(int day)
     {
         var solution = serviceProvider.GetRequiredKeyedService<IPiplinesSolution>(day);
-        //var p1 = await solution.Part1(await client.GetInputAsPipeReader(day));
-        //logger.LogInformation("{Day} Part 1: {Answer}", day, p1);
+        var p1 = await solution.Part1(await client.GetInputAsPipeReader(day));
+        logger.LogInformation("{Day} Part 1: {Answer}", day, p1);
         var p2 = await solution.Part2(await client.GetInputAsPipeReader(day));
         logger.LogInformation("{Day} Part 1: {Answer}", day, p2);
     }

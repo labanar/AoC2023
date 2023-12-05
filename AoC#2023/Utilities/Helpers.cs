@@ -5,6 +5,12 @@ namespace AoC_2023.Utilities
 {
     internal static class Helpers
     {
+        public static void SetIfGreater(this ref int? max, int? current)
+        {
+            if (!max.HasValue && current.HasValue) max = current;
+            else if (max.HasValue && current.HasValue && current.Value > max.Value) max = current;
+        }
+
         internal static void TrimSpaces(this ref ReadOnlySpan<byte> bytes)
         {
             bytes = bytes.Trim((byte)' ');

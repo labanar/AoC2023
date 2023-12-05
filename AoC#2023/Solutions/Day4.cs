@@ -1,4 +1,5 @@
 ﻿using AoC_2023.Utilities;
+using CommunityToolkit.HighPerformance;
 using System.Buffers;
 using System.IO.Pipelines;
 
@@ -9,25 +10,11 @@ namespace AoC_2023.Solutions
         public string Part1(ReadOnlySpan<char> input)
         {
             var total = 0;
-            while (Helpers.ReadLine(ref input, out var line))
+            foreach (var token in input.Tokenize('\n'))
             {
-                line = line.Slice(5);
-                Helpers.ReadNext(ref line, out _, ": ");
-                Helpers.ReadNext(ref line, out var winningNumbers, " | ");
-                var myNumbers = line.Trim();
-                winningNumbers = winningNumbers.Trim();
-                int? pointsForCard = null;
-                while (Helpers.ReadNext(ref winningNumbers, out var winningNumberChars, " "))
-                {
-                    if (ScanForNumber(myNumbers, winningNumberChars))
-                    {
-                        if (pointsForCard == null) pointsForCard = 1;
-                        else pointsForCard *= 2;
-                    }
-                    winningNumbers = winningNumbers.Trim();
-                }
-                if (pointsForCard != null)
-                    total += pointsForCard.Value;
+                if (token.Length == 0) continue;
+                var numMatches = GetNumberOfMatches(token);
+                total += numMatches == 0 ? 0 : (int)Math.Pow(2, numMatches - 1);
             }
             return total.ToString();
         }
@@ -35,26 +22,28 @@ namespace AoC_2023.Solutions
         public string Part2(ReadOnlySpan<char> input)
         {
             var orderedMatches = new List<int>();
-            while (Helpers.ReadLine(ref input, out var line))
+            foreach (var token in input.Tokenize('\n'))
             {
-                var numMatches = 0;
-                line = line.Slice(5);
-                Helpers.ReadNext(ref line, out _, ": ");
-                Helpers.ReadNext(ref line, out var winningNumbers, " | ");
-                var myNumbers = line.Trim();
-                winningNumbers = winningNumbers.Trim();
-                while (Helpers.ReadNext(ref winningNumbers, out var winningNumberChars, " "))
-                {
-                    if (ScanForNumber(myNumbers, winningNumberChars))
-                        numMatches++;
-
-                    winningNumbers = winningNumbers.Trim();
-                }
+                if (token.Length == 0) continue;
+                var numMatches = GetNumberOfMatches(token);
                 orderedMatches.Add(numMatches);
             }
-
             var total = CalculateTotal(orderedMatches, 0, orderedMatches.Count);
             return total.ToString();
+        }
+
+        private int GetNumberOfMatches(ReadOnlySpan<char> line)
+        {
+            var matches = 0;
+            line.ReadTo(out _, ": ");
+            line.ReadTo(out var winningNumbers, " | ");
+            foreach (var token in winningNumbers.Tokenize(' '))
+            {
+                if (token.Length == 0) continue;
+                if (ScanForNumber(line, token))
+                    matches++;
+            }
+            return matches;
         }
 
         private static int CalculateTotal(List<int> orderedMatches, int startCard, int numToCalculate)
@@ -71,10 +60,10 @@ namespace AoC_2023.Solutions
 
         private static bool ScanForNumber(ReadOnlySpan<char> scanSource, ReadOnlySpan<char> valueToFind)
         {
-            while (Helpers.ReadNext(ref scanSource, out var myNumberChars, " "))
+            foreach (var token in scanSource.Tokenize(' '))
             {
-                if (myNumberChars.SequenceEqual(valueToFind)) return true;
-                scanSource = scanSource.Trim();
+                if (token.Length == 0) continue;
+                if (token.SequenceEqual(valueToFind)) return true;
             }
             return false;
         }
@@ -123,15 +112,11 @@ namespace AoC_2023.Solutions
             if (!reader.TryReadTo(out ReadOnlySpan<byte> _, ": "u8, true)) return false;
             if (!reader.TryReadTo(out ReadOnlySpan<byte> winnningNumbers, " | "u8, true)) return false;
             if (!reader.TryReadTo(out ReadOnlySpan<byte> myNumbers, (byte)'\n', true)) return false;
-            winnningNumbers = winnningNumbers.Trim((byte)' ');
-            myNumbers.TrimSpaces();
-            while (Helpers.ReadNext(ref winnningNumbers, out var winningNumberBytes, " "u8))
+            foreach (var token in winnningNumbers.Tokenize((byte)' '))
             {
-                winningNumberBytes.TrimSpaces();
-                if (ScanForNumber(myNumbers, winningNumberBytes))
+                if (token.Length == 0) continue;
+                if (ScanForNumber(myNumbers, token))
                     matches++;
-
-                winnningNumbers.TrimSpaces();
             }
             buffer = buffer.Slice(reader.Position);
             return true;
@@ -139,10 +124,10 @@ namespace AoC_2023.Solutions
 
         private static bool ScanForNumber(ReadOnlySpan<byte> scanSource, ReadOnlySpan<byte> valueToFind)
         {
-            while (Helpers.ReadNext(ref scanSource, out var myNumberChars, " "u8))
+            foreach (var token in scanSource.Tokenize((byte)' '))
             {
-                if (myNumberChars.SequenceEqual(valueToFind)) return true;
-                scanSource.TrimSpaces();
+                if (token.Length == 0) continue;
+                if (token.SequenceEqual(valueToFind)) return true;
             }
             return false;
         }
@@ -159,4 +144,5 @@ namespace AoC_2023.Solutions
             return total;
         }
     }
+
 }
