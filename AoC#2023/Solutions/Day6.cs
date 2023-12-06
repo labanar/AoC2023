@@ -70,7 +70,7 @@ namespace AoC_2023.Solutions
             //Solve for the maximum
             //0 = -2tPressed + tTotal
             //∴ tPressed = tTotal/2
-            var tPressedMax = GetTPressedMax(recordTime, recordDistance);
+            var tPressedMax = GetPressDurationForMaxDistance(recordTime);
             var dMax = tPressedMax * (recordTime - tPressedMax);
 
             //Walk up and deterine when we fall below dRecord
@@ -99,16 +99,16 @@ namespace AoC_2023.Solutions
             return waysToWin;
         }
 
-        private static long GetTPressedMax(long tTotal, long distanceRecord)
+        private static long GetPressDurationForMaxDistance(long recordTime)
         {
-            var tPressedMax = tTotal / 2f;
+            var tPressedMax = recordTime / 2f;
             if (tPressedMax % 1 == 0) return (long)tPressedMax;
 
-            var tPressedMaxUpper = Math.Ceiling(tTotal / 2f);
-            var dMaxUpper = Math.Floor(tPressedMaxUpper * (tTotal - tPressedMaxUpper));
+            var tPressedMaxUpper = Math.Ceiling(recordTime / 2f);
+            var dMaxUpper = Math.Floor(tPressedMaxUpper * (recordTime - tPressedMaxUpper));
 
-            var tPressedMaxLower = Math.Floor(tTotal / 2f);
-            var dMaxLower = Math.Floor(tPressedMaxLower * (tTotal - tPressedMaxLower));
+            var tPressedMaxLower = Math.Floor(recordTime / 2f);
+            var dMaxLower = Math.Floor(tPressedMaxLower * (recordTime - tPressedMaxLower));
 
             return (dMaxUpper > dMaxLower) ? (long)tPressedMaxUpper : (long)tPressedMaxLower;
         }
