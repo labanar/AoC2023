@@ -26,5 +26,33 @@
             input = delimiterPos == -1 ? ReadOnlySpan<char>.Empty : input[(delimiterPos + delimiter.Length)..];
             return slice.Length > 0;
         }
+
+        internal static bool ReadFromEnd(this ref ReadOnlySpan<char> input, out ReadOnlySpan<char> slice, char delimiter)
+        {
+            if (input.Length == 0)
+            {
+                slice = ReadOnlySpan<char>.Empty;
+                return false;
+            }
+
+            var delimiterPos = input.LastIndexOf(delimiter);
+            slice = delimiterPos == -1 ? input : input[(delimiterPos + 1)..];
+            input = delimiterPos == -1 ? ReadOnlySpan<char>.Empty : input[..delimiterPos];
+            return slice.Length > 0;
+        }
+
+        internal static bool ReadFromEnd(this ref ReadOnlySpan<char> input, out ReadOnlySpan<char> slice, ReadOnlySpan<char> delimiter)
+        {
+            if (input.Length == 0)
+            {
+                slice = ReadOnlySpan<char>.Empty;
+                return false;
+            }
+
+            var delimiterPos = input.LastIndexOf(delimiter);
+            slice = delimiterPos == -1 ? input : input[(delimiterPos + delimiter.Length)..];
+            input = delimiterPos == -1 ? ReadOnlySpan<char>.Empty : input[..delimiterPos];
+            return slice.Length > 0;
+        }
     }
 }
