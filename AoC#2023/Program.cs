@@ -59,13 +59,6 @@ internal class Solver(AdventClient client, ILogger<Solver> logger, IServiceProvi
             return;
         }
         var input = await client.DownloadInputFileAsync(day);
-
-        //var input =
-        //    """
-        //    Time:      7  15   30
-        //    Distance:  9  40  200
-        //    """;
-
         var sw = Stopwatch.StartNew();
         var part1 = solution.Part1(input);
         var p1Timing = sw.ElapsedMilliseconds;
