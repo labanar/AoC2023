@@ -5,44 +5,31 @@ namespace AoC_2023.Solutions
 {
     internal class Day7 : ISolution
     {
-        public string Part1(ReadOnlySpan<char> input)
+        public string Part1(ReadOnlySpan<char> input) =>
+             Solve(input, false).ToString();
+        public string Part2(ReadOnlySpan<char> input) =>
+            Solve(input, true).ToString();
+
+        private long Solve(ReadOnlySpan<char> input, bool withJokers)
         {
-            var hands = new List<Hand>();
+            var size = ReadOnlySpanExtensions.Count(input, '\n') + 1;
+            Span<Hand> hands = stackalloc Hand[size];
+            var i = 0;
             foreach (var lineToken in input.Tokenize('\n'))
             {
                 if (lineToken.Trim().Length == 0) continue;
                 var line = lineToken.Trim();
                 line.ReadTo(out var hand, ' ');
                 var bid = int.Parse(line);
-                var handView = new Hand(hand, bid);
-                hands.Add(handView);
+                hands[i++] = new Hand(hand, bid, withJokers);
             }
             var rank = 1;
             var total = 0L;
-            foreach (var hand in hands.OrderBy(x => x.Score))
+            hands.Sort();
+            foreach (var hand in hands)
                 total += hand.Bid * rank++;
 
-            return total.ToString();
-        }
-
-        public string Part2(ReadOnlySpan<char> input)
-        {
-            var hands = new List<Hand>();
-            foreach (var lineToken in input.Tokenize('\n'))
-            {
-                if (lineToken.Trim().Length == 0) continue;
-                var line = lineToken.Trim();
-                line.ReadTo(out var hand, ' ');
-                var bid = int.Parse(line);
-                var handView = new Hand(hand, bid, true);
-                hands.Add(handView);
-            }
-            var rank = 1;
-            var total = 0L;
-            foreach (var hand in hands.OrderBy(x => x.Score))
-                total += hand.Bid * rank++;
-
-            return total.ToString();
+            return total;
         }
     }
 
@@ -57,10 +44,10 @@ namespace AoC_2023.Solutions
         FiveOfAKind
     }
 
-    internal record Hand
+    internal readonly struct Hand : IComparable<Hand>
     {
-        public int Bid { get; }
-        public double Score { get; }
+        public readonly int Bid;
+        public readonly double Score;
         public Hand(ReadOnlySpan<char> cards, int bid, bool treatAsJokers = false)
         {
             Bid = bid;
@@ -153,6 +140,11 @@ namespace AoC_2023.Solutions
                 return HandType.OnePair;
             else
                 return HandType.HighCard;
+        }
+
+        public int CompareTo(Hand other)
+        {
+            return Score.CompareTo(other.Score);
         }
     }
 }
