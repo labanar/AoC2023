@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.IO.Pipelines;
 
 namespace AoC_2023.Utilities
 {
@@ -33,32 +32,6 @@ namespace AoC_2023.Utilities
             return false;
         }
 
-        internal static bool ReadLine(Stream stream, out ReadOnlySpan<char> currentLine)
-        {
-            var reader = PipeReader.Create(stream);
-            currentLine = ReadOnlySpan<char>.Empty;
-            var position = 0;
-            while (reader.TryRead(out var result))
-            {
-                //Keep going until we find a newline
-                foreach (var segment in result.Buffer)
-                {
-                    foreach (var c in segment.Span)
-                    {
-                        if (c == '\n')
-                        {
-                            var lineSlice = result.Buffer.Slice(0, position);
-                            Console.WriteLine(lineSlice.ToString());
-                            reader.AdvanceTo(lineSlice.End);
-                            return true;
-                        }
-                        position++;
-                    }
-                }
-            }
-
-            return false;
-        }
         internal static bool ReadLine(ref ReadOnlySpan<char> input, out ReadOnlySpan<char> currentLine)
         {
             if (input == null || input.Length == 0)

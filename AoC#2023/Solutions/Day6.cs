@@ -6,8 +6,8 @@ namespace AoC_2023.Solutions
     {
         public string Part1(ReadOnlySpan<char> input)
         {
-            var total = 1;
-            Helpers.ReadLine(ref input, out var timeLine);
+            var total = 1L;
+            input.ReadTo(out var timeLine, '\n');
             timeLine.ReadTo(out _, ": ");
             input.ReadTo(out _, ": ");
             while (timeLine.Length > 0)
@@ -20,22 +20,18 @@ namespace AoC_2023.Solutions
                 var recordDistance = int.Parse(distanceChars);
                 total *= CountWaysToWin(recordTime, recordDistance);
             }
-
             return total.ToString();
         }
 
         public string Part2(ReadOnlySpan<char> input)
         {
-            Helpers.ReadLine(ref input, out var timeLine);
+            input.ReadTo(out var timeLine, '\n');
             timeLine.ReadTo(out _, ": ");
             input.ReadTo(out _, ": ");
-            timeLine = timeLine.Trim();
-            input = input.Trim();
             var recordTime = ReadNumber(timeLine);
             var recordDistance = ReadNumber(input);
             return CountWaysToWin(recordTime, recordDistance).ToString();
         }
-
 
         private static long ReadNumber(ReadOnlySpan<char> numbersWithSpaces)
         {
@@ -44,18 +40,12 @@ namespace AoC_2023.Solutions
             while (numbersWithSpaces.ReadFromEnd(out var numberChars, ' '))
             {
                 numbersWithSpaces = numbersWithSpaces.Trim();
-                numberChars = numberChars.Trim();
-                for (var i = 0; i < numberChars.Length; i++)
-                {
-                    var pos = numberChars.Length - 1 - i;
-                    number += Helpers.CharToDigit(numberChars[pos]) * (long)Math.Pow(10, i + digitsObserved);
-                }
-                digitsObserved += numberChars.Length;
+                var currentNum = long.Parse(numberChars);
+                number += currentNum * (long)Math.Pow(10, digitsObserved);
+                digitsObserved += numberChars.Trim().Length;
             }
             return number;
         }
-
-
 
         private static int CountWaysToWin(long recordTime, long recordDistance)
         {
@@ -73,7 +63,7 @@ namespace AoC_2023.Solutions
             var tPressedMax = GetPressDurationForMaxDistance(recordTime);
             var dMax = tPressedMax * (recordTime - tPressedMax);
 
-            //Walk up and deterine when we fall below dRecord
+            //Walk up and determine when we fall below dRecord
             var i = 0;
             var dTest = dMax;
             var waysToWin = 0;
@@ -85,8 +75,7 @@ namespace AoC_2023.Solutions
             }
             while (dTest > recordDistance);
 
-
-            //Walk down and deterine when we fall below dRecord
+            //Walk down and determine when we fall below dRecord
             i = -1;
             dTest = (tPressedMax + i) * (recordTime - (tPressedMax + i));
             while (dTest > recordDistance)
