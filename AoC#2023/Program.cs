@@ -37,18 +37,18 @@ builder.Services.AddKeyedSingleton<ISolution, Day5>(5);
 builder.Services.AddKeyedSingleton<ISolution, Day6>(6);
 builder.Services.AddKeyedSingleton<ISolution, Day7>(7);
 builder.Services.AddKeyedSingleton<ISolution, Day8>(8);
+builder.Services.AddKeyedSingleton<ISolution, Day9>(9);
 builder.Services.AddSingleton<Solver>();
 
 var app = builder.Build();
 var runner = app.Services.GetRequiredService<Solver>();
 await app.StartAsync();
 
-var day = 8;
+var day = 9;
 await runner.Solve(day);
 await runner.SolvePipelines(day);
 
 await app.StopAsync();
-
 
 internal class Solver(AdventClient client, ILogger<Solver> logger, IServiceProvider serviceProvider)
 {
@@ -61,16 +61,6 @@ internal class Solver(AdventClient client, ILogger<Solver> logger, IServiceProvi
             return;
         }
         var input = await client.DownloadInputFileAsync(day);
-
-        //var input =
-        //    """
-        //    LLR
-
-        //    AAA = (BBB, BBB)
-        //    BBB = (AAA, ZZZ)
-        //    ZZZ = (ZZZ, ZZZ)
-        //    """;
-
 
         var sw = Stopwatch.StartNew();
         var part1 = solution.Part1(input);
@@ -102,3 +92,4 @@ internal class Solver(AdventClient client, ILogger<Solver> logger, IServiceProvi
         logger.LogInformation("{Day} Part 2: {Answer} ({Elapsed}ms)", day, p2, p2Timing);
     }
 }
+

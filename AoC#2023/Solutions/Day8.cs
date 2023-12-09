@@ -98,11 +98,7 @@ namespace AoC_2023.Solutions
                 return GCD(b, rem);
             }
             else
-            {
-                var rem = b % a;
-                if (rem == 0) return a;
-                return GCD(a, rem);
-            }
+                return GCD(b, a);
         }
 
         private static long LCM(long a, long b) => a * b / GCD(a, b);
@@ -126,7 +122,6 @@ namespace AoC_2023.Solutions
     public readonly struct NodeId
     {
         public readonly int Id;
-
         public readonly char EndsWith;
         public NodeId(ReadOnlySpan<char> nodeIdChars)
         {

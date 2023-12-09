@@ -11,8 +11,8 @@
             }
             var delimiterPos = input.IndexOf(delimiter);
             slice = delimiterPos == -1 ? input : input[..delimiterPos];
-            input = delimiterPos == -1 ? ReadOnlySpan<char>.Empty : input[(delimiterPos + 1)..];
-            return true;
+            input = delimiterPos == -1 ? [] : input[(delimiterPos + 1)..];
+            return slice.Length > 0;
         }
         internal static bool ReadTo(this ref ReadOnlySpan<char> input, out ReadOnlySpan<char> slice, ReadOnlySpan<char> delimiter)
         {
@@ -23,7 +23,7 @@
             }
             var delimiterPos = input.IndexOf(delimiter);
             slice = delimiterPos == -1 ? input : input[..delimiterPos];
-            input = delimiterPos == -1 ? ReadOnlySpan<char>.Empty : input[(delimiterPos + delimiter.Length)..];
+            input = delimiterPos == -1 ? [] : input[(delimiterPos + delimiter.Length)..];
             return slice.Length > 0;
         }
 
@@ -37,7 +37,7 @@
 
             var delimiterPos = input.LastIndexOf(delimiter);
             slice = delimiterPos == -1 ? input : input[(delimiterPos + 1)..];
-            input = delimiterPos == -1 ? ReadOnlySpan<char>.Empty : input[..delimiterPos];
+            input = delimiterPos == -1 ? [] : input[..delimiterPos];
             return slice.Length > 0;
         }
 
@@ -51,7 +51,7 @@
 
             var delimiterPos = input.LastIndexOf(delimiter);
             slice = delimiterPos == -1 ? input : input[(delimiterPos + delimiter.Length)..];
-            input = delimiterPos == -1 ? ReadOnlySpan<char>.Empty : input[..delimiterPos];
+            input = delimiterPos == -1 ? [] : input[..delimiterPos];
             return slice.Length > 0;
         }
     }

@@ -12,6 +12,5 @@ namespace AoC_2023.Solutions
     {
         Task<string> Part1(PipeReader pipe);
         Task<string> Part2(PipeReader pipe);
-
     }
 }
