@@ -8,19 +8,146 @@ internal class Day10 : ISolution
     public string Part1(ReadOnlySpan<char> input)
     {
         var grid = new Grid(input);
-        var pathDown = grid.GetPathLength(Direction.Down);
-        var pathUp = grid.GetPathLength(Direction.Up);
-        var pathRight = grid.GetPathLength(Direction.Right);
-        var pathLeft = grid.GetPathLength(Direction.Left);
-        var pathTotal = (pathDown ?? 0) + (pathUp ?? 0) + (pathRight ?? 0) + (pathLeft ?? 0);
-        return (pathTotal / 4).ToString();
+        var (_, length) = FindPath(grid);
+        return (length / 2).ToString();
     }
 
     public string Part2(ReadOnlySpan<char> input)
     {
-        return "X";
+        var grid = new Grid(input);
+        //grid.Print();
+
+        var (direction, length) = FindPath(grid);
+        Span<Pipe> path = stackalloc Pipe[length];
+        grid.WritePath(direction, path);
+
+        //Stretch the grid out by a factor of 2, to create space to squeeze out a tile
+        var expandedWidth = grid.Width * 2;
+        var expandedHeight = grid.Height * 2;
+        Span<char> expandedGridInput = stackalloc char[((expandedWidth + 1) * expandedHeight) - 1];
+        expandedGridInput.Fill('¥');
+        for (var i = 0; i < (grid.Height * 2) - 1; i++)
+        {
+            var offset = (i * (expandedWidth + 1)) + expandedWidth;
+            expandedGridInput[offset] = '\n';
+        }
+
+        for (var i = 0; i < grid.Width; i++)
+            for (var j = 0; j < grid.Height - 1; j++)
+            {
+                var c = grid.GetCharAt(i, j);
+                var scaledX = i * 2;
+                var scaledY = j * 2;
+                var offset = (scaledY * (expandedWidth + 1)) + scaledX;
+                if (!c.HasValue)
+                    continue;
+
+                //We don't really care about the value of the tiles that are not part of the path
+                //Therefore we'll make them . to make traversal easier later
+                expandedGridInput[offset] = '.';
+            }
+
+        //Now write in the expanded out path
+        for (var i = 0; i < path.Length; i++)
+        {
+            var current = path[i];
+            var nextIdx = (i + 1) % path.Length;
+            var next = path[nextIdx];
+
+            var intermediateChar = current.GetIntermediatePipe(next);
+            var d = current.GetConnectionDirection(next);
+
+            var scaledX = current.Position.X * 2;
+            var scaledY = current.Position.Y * 2;
+
+            var scaledNextX = next.Position.X * 2;
+            var scaledNextY = next.Position.Y * 2;
+
+            var intermediateX = scaledX + d.Vector.x;
+            var intermediateY = scaledY + d.Vector.y;
+
+            var offset = (scaledY * (expandedWidth + 1)) + scaledX;
+            var intermediateOffset = (intermediateY * (expandedWidth + 1)) + intermediateX;
+
+            expandedGridInput[offset] = current.Symbol.Value;
+            expandedGridInput[intermediateOffset] = intermediateChar;
+        }
+
+        var expandedGrid = new Grid(expandedGridInput);
+        //expandedGrid.PrintPretty();
+
+
+        //Start at the end of the expanded graph (the final row should be all '¥' characters from our expansion step
+        //We can use this as a starting point to walk to the rest of the tiles that are outside of the pipe loop
+        var visited = BFS(expandedGrid, expandedGrid.Width - 1, expandedHeight - 1);
+
+        var enclosedCount = 0;
+        for (var x = 0; x < expandedGrid.Width; x++)
+            for (var y = 0; y < expandedGrid.Height; y++)
+            {
+                var offset = (y * (expandedGrid.Width + 1)) + x;
+
+                //Since we injected a bunch of '¥' chars, we only want to count the dots
+                if (expandedGrid.GetCharAt(x, y) != '.') continue;
+                if (visited[x, y])
+                {
+                    continue;
+                }
+
+                expandedGridInput[offset] = '$';
+                enclosedCount++;
+            }
+
+        return enclosedCount.ToString();
     }
 
+    private static bool[,] BFS(Grid grid, int startX, int startY)
+    {
+        var queue = new Queue<(int x, int y)>();
+        var visited = new bool[grid.Width, grid.Height];
+        queue.Enqueue((startX, startY));
+        visited[startX, startY] = true;
+        Span<Direction> directions = [Direction.Left, Direction.Right, Direction.Up, Direction.Down];
+        while (queue.Count > 0)
+        {
+            var (x, y) = queue.Dequeue();
+            for (int i = 0; i < directions.Length; i++)
+            {
+                var nextX = x + directions[i].Vector.x;
+                var nextY = y + directions[i].Vector.y;
+
+                if (nextX < 0 || nextX >= grid.Width || nextY < 0 || nextY >= grid.Height)
+                    continue;
+
+                //If the neighbouring node is a '.' or '#' and we have not visited it, then add it to our queue 
+                var nextChar = grid.GetCharAt(nextX, nextY);
+                if ((nextChar == '.' || nextChar == '¥') && !visited[nextX, nextY])
+                {
+                    queue.Enqueue((nextX, nextY));
+                    visited[nextX, nextY] = true;
+                }
+            }
+        }
+        return visited;
+    }
+
+    private static (Direction, int) FindPath(Grid grid)
+    {
+        var startPos = grid.Find('S');
+        var pathDown = grid.GetPathLength(startPos, Direction.Down);
+        if (pathDown.HasValue) return (Direction.Down, pathDown.Value);
+
+        var pathUp = grid.GetPathLength(startPos, Direction.Up);
+        if (pathUp.HasValue) return (Direction.Up, pathUp.Value);
+
+        var pathRight = grid.GetPathLength(startPos, Direction.Right);
+        if (pathRight.HasValue) return (Direction.Right, pathRight.Value);
+
+        var pathLeft = grid.GetPathLength(startPos, Direction.Left);
+        if (pathLeft.HasValue) return (Direction.Left, pathLeft.Value);
+
+        return (Direction.None, 0);
+    }
 
     internal readonly ref struct Grid
     {
@@ -43,11 +170,93 @@ internal class Day10 : ISolution
             return _data[offset];
         }
 
-        public char? GetCharRelative((int x, int y) p, Direction direction)
+
+        public void PrintPath(Span<Pipe> path)
         {
-            var x = p.x + direction.Vector.x;
-            var y = p.y + direction.Vector.y;
-            return GetCharAt(x, y);
+            Span<char> prettied = stackalloc char[_data.Length];
+            _data.CopyTo(prettied);
+
+            foreach (var pipe in path)
+            {
+                var offset = (pipe.Position.Y * (Width + 1)) + pipe.Position.X;
+                prettied[offset] = '&';
+            }
+
+            foreach (var c in prettied)
+                Console.Write(c);
+
+            Console.WriteLine();
+        }
+
+        public void Print()
+        {
+            var (direction, length) = FindPath();
+            Span<Pipe> path = new Pipe[length];
+            WritePath(direction, path);
+
+            Span<char> prettied = stackalloc char[_data.Length];
+            _data.CopyTo(prettied);
+
+            foreach (var pipe in path)
+            {
+                var offset = (pipe.Position.Y * (Width + 1)) + pipe.Position.X;
+                prettied[offset] = pipe.Symbol.Value;
+            }
+
+            foreach (var c in prettied)
+                Console.Write(c);
+
+            Console.WriteLine();
+        }
+
+        public void PrintPretty()
+        {
+            var (direction, length) = FindPath();
+            Span<Pipe> path = new Pipe[length];
+            WritePath(direction, path);
+
+            Span<char> prettied = stackalloc char[_data.Length];
+            _data.CopyTo(prettied);
+
+            foreach (var pipe in path)
+            {
+                var offset = (pipe.Position.Y * (Width + 1)) + pipe.Position.X;
+                var symbol = pipe.Symbol!.Value;
+                var prettyChar = symbol switch
+                {
+                    'F' => '┌',
+                    '7' => '┐',
+                    'J' => '┘',
+                    'L' => '└',
+                    '-' => '─',
+                    '|' => '│',
+                    _ => symbol
+                };
+                prettied[offset] = prettyChar;
+            }
+
+            foreach (var c in prettied)
+                Console.Write(c);
+
+            Console.WriteLine();
+        }
+
+        public (Direction, int) FindPath()
+        {
+            var startPos = Find('S');
+            var pathDown = GetPathLength(startPos, Direction.Down);
+            if (pathDown.HasValue) return (Direction.Down, pathDown.Value);
+
+            var pathUp = GetPathLength(startPos, Direction.Up);
+            if (pathUp.HasValue) return (Direction.Up, pathUp.Value);
+
+            var pathRight = GetPathLength(startPos, Direction.Right);
+            if (pathRight.HasValue) return (Direction.Right, pathRight.Value);
+
+            var pathLeft = GetPathLength(startPos, Direction.Left);
+            if (pathLeft.HasValue) return (Direction.Left, pathLeft.Value);
+
+            return (Direction.None, 0);
         }
 
         public char? GetCharAt((int x, int y) p) => GetCharAt(p.x, p.y);
@@ -97,9 +306,8 @@ internal class Day10 : ISolution
             return Pipe.GroundPipe;
         }
 
-        public int? GetPathLength(Direction direction)
+        public int? GetPathLength((int x, int y) startPosition, Direction direction)
         {
-            var startPosition = Find('S');
             var previous = new Pipe(GetCharAt(startPosition), startPosition);
             var currentPos = (startPosition.x + direction.Vector.x, startPosition.y + direction.Vector.y);
             var current = new Pipe(GetCharAt(currentPos), currentPos);
@@ -117,6 +325,25 @@ internal class Day10 : ISolution
                 return i;
 
             return null;
+        }
+
+        public void WritePath(Direction direction, Span<Pipe> buffer)
+        {
+            var startPosition = Find('S');
+            var previous = new Pipe(GetCharAt(startPosition), startPosition);
+            var currentPos = (startPosition.x + direction.Vector.x, startPosition.y + direction.Vector.y);
+            var current = new Pipe(GetCharAt(currentPos), currentPos);
+            var next = Advance(current, previous);
+            buffer[0] = previous;
+            buffer[1] = current;
+            var i = 2;
+            while (!next.Ground && next.Position != startPosition)
+            {
+                buffer[i++] = next;
+                previous = current;
+                current = next;
+                next = Advance(current, previous);
+            }
         }
     }
 
@@ -174,6 +401,11 @@ internal class Day10 : ISolution
 
         public bool CanConnectTo(Pipe other)
         {
+            //Grounds can connect together for our part 2 solution
+            //if (Symbol == '.' && other.Symbol == '.') return true;
+            //if (Symbol == '.' && other.Symbol == '#') return true;
+            //if (Symbol == '#' && other.Symbol == '.') return true;
+
             //Anything can terminate to S
             if (other.Symbol == 'S') return true;
             if (OutletA.Vector == other.InletA.Vector) return true;
@@ -181,6 +413,21 @@ internal class Day10 : ISolution
             if (OutletB.Vector == other.InletA.Vector) return true;
             if (OutletB.Vector == other.InletB.Vector) return true;
             return false;
+        }
+
+        public Direction GetConnectionDirection(Pipe next)
+        {
+            return new Direction(next.Position.X - Position.X, next.Position.Y - Position.Y);
+        }
+
+
+        //If we're trying to "stretch" the connection between two pipes, this will tell us which pipe to place between our pipe and the next pipe
+        public char GetIntermediatePipe(Pipe next)
+        {
+            var d = GetConnectionDirection(next);
+            if (d.Vector.x != 0) return '-';
+            if (d.Vector.y != 0) return '|';
+            return '?';
         }
     }
 
